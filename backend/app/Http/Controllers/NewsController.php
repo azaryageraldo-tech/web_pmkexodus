@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\News;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
     public function index()
     {
-        $news = News::all();
-        return response()->json(['data' => $news]);
+        $news = News::latest()->get();
+        return response()->json([
+            'status' => 'success',
+            'data' => $news
+        ]);
     }
 
     public function store(Request $request)
@@ -19,54 +21,50 @@ class NewsController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'image' => 'nullable|string'
         ]);
 
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $path = $image->store('news', 'public');
-            $validated['image'] = $path;
-        }
-
         $news = News::create($validated);
+
         return response()->json([
-            'success' => true,
+            'status' => 'success',
+            'message' => 'News created successfully',
             'data' => $news
         ], 201);
     }
 
     public function show(News $news)
     {
-        return response()->json(['data' => $news]);
+        return response()->json([
+            'status' => 'success',
+            'data' => $news
+        ]);
     }
 
     public function update(Request $request, News $news)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'title' => 'string|max:255',
+            'content' => 'string',
+            'image' => 'nullable|string'
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($news->image) {
-                Storage::disk('public')->delete($news->image);
-            }
-            $image = $request->file('image');
-            $path = $image->store('news', 'public');
-            $validated['image'] = $path;
-        }
-
         $news->update($validated);
-        return response()->json(['data' => $news]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'News updated successfully',
+            'data' => $news
+        ]);
     }
 
     public function destroy(News $news)
     {
-        if ($news->image) {
-            Storage::disk('public')->delete($news->image);
-        }
         $news->delete();
-        return response()->json(null, 204);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'News deleted successfully'
+        ]);
     }
 }
