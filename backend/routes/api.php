@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -21,4 +22,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Core resources only
     Route::apiResource('members', MemberController::class);
     Route::apiResource('news', NewsController::class);
+    
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 });

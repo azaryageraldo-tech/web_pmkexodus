@@ -8,20 +8,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
-    use SoftDeletes;
-    
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'title',
         'description',
         'location',
+        'status',
         'start_date',
         'end_date',
         'image',
         'category_id'
     ];
 
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
+    protected $dates = [
+        'start_date',
+        'end_date',
+        'deleted_at'
+    ];
 }
