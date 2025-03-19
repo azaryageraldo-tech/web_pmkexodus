@@ -31,27 +31,43 @@ export default function EventForm({ isOpen, onClose, onSuccess, event }: EventFo
     status: 'upcoming',
     start_date: '',
     end_date: '',
-    category_id: ''
+    category_id: ''  // Menambahkan category_id yang sebelumnya dihapus
   });
+  
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
-
-  // Add categories fetch
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  
   useEffect(() => {
     const fetchCategories = async () => {
+      setCategoriesLoading(true);
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Sesi telah berakhir, silakan login kembali');
+          return;
+        }
+    
         const response = await axios.get('http://localhost:8000/api/categories', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setCategories(response.data.data);
-      } catch (error) {
-        console.error('Failed to fetch categories');
+        
+        if (response.data && response.data.data) {
+          setCategories(response.data.data);
+        } else {
+          toast.error('Format data kategori tidak valid');
+        }
+      } catch (error: any) {
+        const message = error.response?.data?.message || 'Gagal mengambil data kategori';
+        toast.error(message);
+        console.error('Error fetching categories:', error);
+      } finally {
+        setCategoriesLoading(false);
       }
     };
-
+  
     fetchCategories();
   }, []);
 
@@ -83,7 +99,7 @@ export default function EventForm({ isOpen, onClose, onSuccess, event }: EventFo
       status: 'upcoming',
       start_date: '',
       end_date: '',
-      category_id: ''
+      category_id: ''  // tetap sertakan category_id
     });
     setImage(null);
     setImagePreview('');
@@ -255,6 +271,7 @@ export default function EventForm({ isOpen, onClose, onSuccess, event }: EventFo
             />
           </div>
 
+          // Di bagian JSX, hapus div status yang duplikat dan perbaiki komentar
           <div>
             <label className="block text-sm font-medium text-gray-700">Status</label>
             <select
@@ -269,26 +286,25 @@ export default function EventForm({ isOpen, onClose, onSuccess, event }: EventFo
           </div>
 
           <div>
-            // Ganti div kategori yang lama dengan ini
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Kategori</label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                <option value="">Pilih Kategori</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <label className="block text-sm font-medium text-gray-700">Kategori</label>
+            <select
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              disabled={categoriesLoading}
+            >
+              <option value="">
+                {categoriesLoading ? 'Memuat kategori...' : 'Pilih Kategori'}
+              </option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
-            {/* Remove onClick={onClose} and use onClick={handleClose} instead */}
             <button
               type="button"
               onClick={handleClose}
